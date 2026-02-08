@@ -1,0 +1,166 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  
+}
+
+enum RoleType {
+  SUPER_ADMIN
+  ADMIN
+  MODERATOR
+  PR
+}
+
+enum MembershipStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+
+model Role {
+  id          String   @id
+  name        RoleType @unique
+  permissions RolePermission[]
+  users       UserRole[]
+}
+
+model Permission {
+  id              String           @id
+  key             String           @unique
+  rolePermissions RolePermission[]
+}
+
+model UserRole {
+  userId String
+  roleId String
+
+  user User @relation(fields: [userId], references: [id])
+  role Role @relation(fields: [roleId], references: [id])
+
+  @@id([userId, roleId])
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+
+  role       Role       @relation(fields: [roleId], references: [id])
+  permission Permission @relation(fields: [permissionId], references: [id])
+
+  @@id([roleId, permissionId])
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  isActive  Boolean  @default(true)
+
+  roles     UserRole[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  authSessions AuthSession[]
+  reviewedMemberships Membership[]
+  auditLogs AuditLog[]
+}
+
+model AuthSession {
+  id           String   @id @default(uuid())
+
+  userId       String
+  tokenHash    String
+  isRevoked    Boolean  @default(false)
+
+  ipAddress    String?
+  userAgent    String?
+  deviceType   String?  
+  os           String?
+  browser      String?
+
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user         User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@map("auth_sessions")
+}
+
+model Membership {
+  id            String            @id @default(uuid())
+
+  // Personal Identity
+  fullName      String
+  dob           DateTime
+  bloodGroup    String?
+  occupation    String
+  aadharNumber  String            @unique
+
+  // Contact
+  email         String
+  phone         String
+
+  // Location
+  address       String
+  zone          String
+  district      String
+  state         String
+
+  // Social
+  instagramId   String?
+  xTwitterId    String?
+
+  // Membership workflow
+  status        MembershipStatus  @default(PENDING)
+  reviewedById  String?
+  reviewedAt    DateTime?
+  rejectionReason String?
+
+  // Metadata
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  reviewedBy    User?             @relation(fields: [reviewedById], references: [id])
+
+  @@index([status])
+  @@index([email])
+  @@index([phone])
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+
+  userId      String?
+  action      String   // e.g. USER_CREATE, MEMBERSHIP_APPROVE
+  entity      String   // User, Membership, News, etc
+  entityId    String?
+  metadata    Json?
+
+  ipAddress   String?
+  userAgent   String?
+
+  createdAt   DateTime @default(now())
+
+  user        User?    @relation(fields: [userId], references: [id])
+
+  @@index([action])
+  @@index([entity])
+  @@index([userId])
+  @@map("audit_logs")
+}
+
