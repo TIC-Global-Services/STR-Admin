@@ -28,6 +28,12 @@ enum MembershipStatus {
 }
 
 
+enum SocialPlatform {
+  INSTAGRAM
+  X
+}
+
+
 model Role {
   id          String   @id
   name        RoleType @unique
@@ -75,6 +81,8 @@ model User {
   authSessions AuthSession[]
   reviewedMemberships Membership[]
   auditLogs AuditLog[]
+  news  News[]
+  socialPost  SocialPost[]
 }
 
 model AuthSession {
@@ -113,7 +121,7 @@ model Membership {
 
   // Contact
   email         String
-  phone         String
+  phone         String            
 
   // Location
   address       String
@@ -141,6 +149,48 @@ model Membership {
   @@index([email])
   @@index([phone])
 }
+
+
+model News {
+  id          String   @id @default(uuid())
+
+  title       String
+  slug        String   @unique
+  summary     String?
+  content     String
+
+  coverImage  String?
+  isPublished Boolean  @default(false)
+  publishedAt DateTime?
+
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id])
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isPublished])
+  @@index([publishedAt])
+}
+
+model SocialPost {
+  id        String         @id @default(uuid())
+  platform  SocialPlatform
+
+  postUrl   String
+  caption   String?
+  isActive  Boolean        @default(true)
+
+  createdBy String
+  creator   User           @relation(fields: [createdBy], references: [id])
+
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@index([platform])
+  @@index([isActive])
+}
+
 
 model AuditLog {
   id          String   @id @default(uuid())

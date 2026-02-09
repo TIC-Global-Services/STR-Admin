@@ -16,7 +16,7 @@ export class AuthService {
   ) {}
 
   async validateUser(email: string, password: string) {
-    const user = await this.usersService.findByEmailWithRoles(email);
+    const user = await this.usersService.getUserForAuth(email);
     if (!user) return null;
 
     const passwordValid = await bcrypt.compare(password, user.password);
@@ -26,6 +26,8 @@ export class AuthService {
   }
 
   async login(user: any, req: any) {
+
+    console.log(user)
     const payload = {
       sub: user.id,
       email: user.email,
@@ -83,7 +85,8 @@ export class AuthService {
         data: { isRevoked: true },
       });
 
-      const user = await this.usersService.findByIdWithRoles(decoded.sub);
+    
+      const user = await this.usersService.getUserByIdForAuth(decoded.sub);
       if (!user) throw new UnauthorizedException();
 
       return this.login(user, req);

@@ -42,6 +42,24 @@ export class MembershipService {
     });
   }
 
+  findAll() {
+    return this.prisma.membership.findMany();
+  }
+
+  findApproved() {
+    return this.prisma.membership.findMany({
+      where: { status: 'APPROVED' },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  findRejected() {
+    return this.prisma.membership.findMany({
+      where: { status: 'REJECTED' },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   // -------------------------
   // APPROVE
   // -------------------------

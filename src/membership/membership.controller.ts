@@ -18,16 +18,34 @@ import { RejectMembershipDto } from './dto/reject-membership.dto';
 export class MembershipController {
   constructor(private readonly service: MembershipService) {}
 
+  @Get('all')
+  @Permissions('MEMBERSHIP_APPROVE')
+  getAll() {
+    return this.service.findAll();
+  }
+
   @Get('pending')
   @Permissions('MEMBERSHIP_APPROVE')
   getPending() {
     return this.service.findPending();
   }
 
+  @Get('approved-members')
+  @Permissions('MEMBERSHIP_APPROVE')
+  getApproved() {
+    return this.service.findApproved();
+  }
+
+  @Get('rejected-members')
+  @Permissions('MEMBERSHIP_APPROVE')
+  getRejected() {
+    return this.service.findRejected();
+  }
+
   @Post(':id/approve')
   @Permissions('MEMBERSHIP_APPROVE')
   approve(@Param('id') id: string, @Request() req) {
-    req.auditAction = {
+    req.raw.auditAction = {
       action: 'MEMBERSHIP_APPROVE',
       entity: 'Membership',
       entityId: id,
@@ -42,6 +60,11 @@ export class MembershipController {
     @Body() dto: RejectMembershipDto,
     @Request() req,
   ) {
+    req.raw.auditAction = {
+      action: 'MEMBERSHIP_REJECT',
+      entity: 'Membership',
+      entityId: id,
+    };
     return this.service.reject(id, req.user.sub, dto.reason);
   }
 }

@@ -10,6 +10,8 @@ import { AuditModule } from './audit/audit.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { AuditLogInterceptor } from './audit/audit.interceptor';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { NewsModule } from './news/news.module';
+import { SocialPostsModule } from './social_posts/social_posts.module';
 
 @Module({
   imports: [
@@ -22,14 +24,12 @@ import { AnalyticsModule } from './analytics/analytics.module';
     MembershipModule,
     AuditModule,
     AnalyticsModule,
+    NewsModule,
+    SocialPostsModule,
   ],
   controllers: [AppController],
   providers: [
     AppService,
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: AuditLogInterceptor,
-    },
   ],
 })
 export class AppModule {}

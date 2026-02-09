@@ -1,7 +1,48 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Get, UseGuards } from '@nestjs/common';
 import { AnalyticsService } from './analytics.service';
 
-@Controller('analytics')
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { PermissionsGuard } from '../common/guards/permissions.guard';
+import { Permissions } from '../common/decorators/permissions.decorator';
+
+@Controller('admin/analytics')
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class AnalyticsController {
-  constructor(private readonly analyticsService: AnalyticsService) {}
+  constructor(private readonly service: AnalyticsService) {}
+
+  @Get('dashboard')
+  @Permissions('ANALYTICS_VIEW')
+  dashboard() {
+    return this.service.dashboard();
+  }
+
+  @Get('memberships')
+  @Permissions('ANALYTICS_VIEW')
+  memberships() {
+    return this.service.membershipAnalytics();
+  }
+
+  @Get('memberships/dimensions')
+  @Permissions('ANALYTICS_VIEW')
+  membershipDimensions() {
+    return this.service.membershipDimensions();
+  }
+
+  @Get('users')
+  @Permissions('ANALYTICS_VIEW')
+  users() {
+    return this.service.userAnalytics();
+  }
+
+  @Get('news')
+  @Permissions('ANALYTICS_VIEW')
+  news() {
+    return this.service.newsAnalytics();
+  }
+
+  @Get('social')
+  @Permissions('ANALYTICS_VIEW')
+  social() {
+    return this.service.socialAnalytics();
+  }
 }

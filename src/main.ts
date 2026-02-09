@@ -6,7 +6,6 @@ import {
   NestFastifyApplication,
 } from '@nestjs/platform-fastify';
 import { AuditLogInterceptor } from './audit/audit.interceptor';
-import { AuditService } from './audit/audit.service';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -43,8 +42,10 @@ async function bootstrap() {
     }),
   );
 
+  // app.useGlobalInterceptors(app.get(AuditLogInterceptor));
+
   await app.listen({
-    port: Number(process.env.PORT) || 3000,
+    port: Number(process.env.PORT) || 5000,
     host: '0.0.0.0',
   });
 }

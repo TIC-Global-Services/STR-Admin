@@ -74,6 +74,9 @@ export class UsersService {
   getUserForAuth(email: string) {
     return this.usersRepo.findByEmailForAuth(email);
   }
+  getUserByIdForAuth(email: string) {
+    return this.usersRepo.findByIdForAuth(email);
+  }
 
   getUserById(id: string) {
     return this.usersRepo.findByIdForView(id);

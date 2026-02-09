@@ -35,6 +35,36 @@ export class UsersRepository {
     });
   }
 
+  findByIdForAuth(id: string) {
+    return this.prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        email: true,
+        password: true,
+        isActive: true,
+        roles: {
+          select: {
+            role: {
+              select: {
+                name: true,
+                permissions: {
+                  select: {
+                    permission: {
+                      select: {
+                        key: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
   findByIdForView(id: string) {
     return this.prisma.user.findUnique({
       where: { id },
@@ -68,7 +98,10 @@ export class UsersRepository {
   }
 
   // UPDATE USER
-  updateUser(id: string, data: Partial<{ password: string; isActive: boolean }>) {
+  updateUser(
+    id: string,
+    data: Partial<{ password: string; isActive: boolean }>,
+  ) {
     return this.prisma.user.update({
       where: { id },
       data,
@@ -95,7 +128,7 @@ export class UsersRepository {
     });
   }
 
-  // LIST USERS 
+  // LIST USERS
   findManyForList(skip = 0, take = 20) {
     return this.prisma.user.findMany({
       skip,
