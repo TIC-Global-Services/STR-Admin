@@ -33,6 +33,19 @@ async function bootstrap() {
     defaultVersion: '1',
   });
 
+  await app.register(import('@fastify/cors'), {
+    origin: [
+      'http://localhost:3000',
+      'http://127.0.0.1:3000',
+      'https://str-admin.vercel.app',
+    ],
+    credentials: true,
+  });
+
+  await app.register(import('@fastify/cookie'), {
+    secret: process.env.COOKIE_SECRET,
+  });
+
   // Global Validation
   app.useGlobalPipes(
     new ValidationPipe({

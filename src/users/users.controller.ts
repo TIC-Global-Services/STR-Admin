@@ -6,6 +6,7 @@ import {
   Body,
   Param,
   UseGuards,
+  Request,
 } from '@nestjs/common';
 
 import { UsersService } from './users.service';
@@ -22,6 +23,15 @@ import { toUserResponse } from './users.mapper';
 @UseGuards(JwtAuthGuard, PermissionsGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+
+  @Get('me')
+  async getCurrentUser(@Request() req) {
+    const userId = req.user.sub;
+
+    const user = await this.usersService.getUserById(userId);
+
+    return toUserResponse(user);
+  }
 
   // -------------------------
   // CREATE USER
