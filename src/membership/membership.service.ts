@@ -24,12 +24,67 @@ export class MembershipService {
       throw new BadRequestException('Membership already exists');
     }
 
+    const year = new Date().getFullYear();
+    const prefix = `STRFC-${year}-`;
+
+    const lastMember = await this.prisma.membership.findFirst({
+      where: {
+        uniqueMemberId: {
+          startsWith: prefix,
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      select: { uniqueMemberId: true },
+    });
+
+    let nextNumber = 1;
+
+    if (lastMember?.uniqueMemberId) {
+      const lastNumber = parseInt(
+        lastMember.uniqueMemberId.split('-')[2] || '0',
+      );
+      nextNumber = lastNumber + 1;
+    }
+
+    const paddedNumber = String(nextNumber).padStart(7, '0');
+    const uniqueMemberId = `${prefix}${paddedNumber}`;
+
     return this.prisma.membership.create({
       data: {
         ...dto,
         dob: new Date(dto.dob),
+        uniqueMemberId,
       },
     });
+  }
+
+  async verify(memberId: string) {
+    const member = await this.prisma.membership.findUnique({
+      where: { uniqueMemberId: memberId },
+      select: {
+        uniqueMemberId: true,
+        fullName: true,
+        district: true,
+        status: true,
+        createdAt: true,
+      },
+    });
+
+    if (!member) {
+      return {
+        valid: false,
+        message: 'Invalid Membership ID',
+      };
+    }
+
+    return {
+      valid: true,
+      membershipId: member.uniqueMemberId,
+      fullName: member.fullName,
+      district: member.district,
+      status: member.status,
+      year: member.createdAt.getFullYear(),
+    };
   }
 
   // -------------------------

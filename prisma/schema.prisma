@@ -4,14 +4,12 @@
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
-  
 }
 
 enum RoleType {
@@ -27,16 +25,14 @@ enum MembershipStatus {
   REJECTED
 }
 
-
 enum SocialPlatform {
   INSTAGRAM
   X
 }
 
-
 model Role {
-  id          String   @id
-  name        RoleType @unique
+  id          String           @id
+  name        RoleType         @unique
   permissions RolePermission[]
   users       UserRole[]
 }
@@ -68,41 +64,41 @@ model RolePermission {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  isActive  Boolean  @default(true)
+  id       String  @id @default(uuid())
+  email    String  @unique
+  password String
+  isActive Boolean @default(true)
 
-  roles     UserRole[]
+  roles UserRole[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  authSessions AuthSession[]
+  authSessions        AuthSession[]
   reviewedMemberships Membership[]
-  auditLogs AuditLog[]
-  news  News[]
-  socialPost  SocialPost[]
+  auditLogs           AuditLog[]
+  news                News[]
+  socialPost          SocialPost[]
 }
 
 model AuthSession {
-  id           String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  userId       String
-  tokenHash    String
-  isRevoked    Boolean  @default(false)
+  userId    String
+  tokenHash String
+  isRevoked Boolean @default(false)
 
-  ipAddress    String?
-  userAgent    String?
-  deviceType   String?  
-  os           String?
-  browser      String?
+  ipAddress  String?
+  userAgent  String?
+  deviceType String?
+  os         String?
+  browser    String?
 
-  expiresAt    DateTime
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  user         User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@index([tokenHash])
@@ -110,108 +106,106 @@ model AuthSession {
 }
 
 model Membership {
-  id            String            @id @default(uuid())
+  id             String @id @default(uuid())
+  uniqueMemberId String? @unique
 
   // Personal Identity
-  fullName      String
-  dob           DateTime
-  bloodGroup    String?
-  occupation    String
-  aadharNumber  String            @unique
+  fullName     String
+  dob          DateTime
+  bloodGroup   String?
+  occupation   String
+  aadharNumber String   @unique
 
   // Contact
-  email         String
-  phone         String            
+  email String
+  phone String
 
   // Location
-  address       String
-  zone          String
-  district      String
-  state         String
+  address  String
+  zone     String
+  district String
+  state    String
 
   // Social
-  instagramId   String?
-  xTwitterId    String?
+  instagramId String?
+  xTwitterId  String?
 
   // Membership workflow
-  status        MembershipStatus  @default(PENDING)
-  reviewedById  String?
-  reviewedAt    DateTime?
+  status          MembershipStatus @default(PENDING)
+  reviewedById    String?
+  reviewedAt      DateTime?
   rejectionReason String?
 
   // Metadata
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  reviewedBy    User?             @relation(fields: [reviewedById], references: [id])
+  reviewedBy User? @relation(fields: [reviewedById], references: [id])
 
   @@index([status])
   @@index([email])
   @@index([phone])
 }
 
-
 model News {
-  id          String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  title       String
-  slug        String   @unique
-  summary     String?
-  content     String
+  title   String
+  slug    String  @unique
+  summary String?
+  content String
 
   coverImage  String?
   bannerImage String?
-  isPublished Boolean  @default(false)
+  isPublished Boolean   @default(false)
   publishedAt DateTime?
 
-  authorId    String
-  author      User     @relation(fields: [authorId], references: [id])
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id])
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([isPublished])
   @@index([publishedAt])
 }
 
 model SocialPost {
-  id        String         @id @default(uuid())
-  platform  SocialPlatform
+  id       String         @id @default(uuid())
+  platform SocialPlatform
 
-  postUrl   String
-  caption   String?
-  isActive  Boolean        @default(true)
+  postUrl  String
+  caption  String?
+  isActive Boolean @default(true)
 
   createdBy String
-  creator   User           @relation(fields: [createdBy], references: [id])
+  creator   User   @relation(fields: [createdBy], references: [id])
 
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([platform])
   @@index([isActive])
 }
 
-
 model AuditLog {
-  id          String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  userId      String?
-  action      String   // e.g. USER_CREATE, MEMBERSHIP_APPROVE
-  entity      String   // User, Membership, News, etc
-  entityId    String?
-  metadata    Json?
+  userId   String?
+  action   String // e.g. USER_CREATE, MEMBERSHIP_APPROVE
+  entity   String // User, Membership, News, etc
+  entityId String?
+  metadata Json?
 
-  ipAddress   String?
-  userAgent   String?
+  ipAddress String?
+  userAgent String?
 
-  createdAt   DateTime @default(now())
+  createdAt DateTime @default(now())
 
-  user        User?    @relation(fields: [userId], references: [id])
+  user User? @relation(fields: [userId], references: [id])
 
   @@index([action])
   @@index([entity])
   @@index([userId])
   @@map("audit_logs")
 }
-
