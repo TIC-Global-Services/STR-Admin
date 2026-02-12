@@ -28,21 +28,19 @@ export class AuthController {
       req,
     );
 
-    reply.setCookie('accessToken', accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'none',
-      domain: '.theinternetcompany.one',
-      path: '/',
-    });
+    const isProd = process.env.NODE_ENV === 'production';
 
-    reply.setCookie('refreshToken', refreshToken, {
+    const cookieOptions = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'none',
-      domain: '.theinternetcompany.one',
+      secure: isProd, 
+      sameSite: isProd ? ('none' as const) : ('lax' as const),
+      domain: isProd ? '.theinternetcompany.one' : undefined,
       path: '/',
-    });
+    };
+
+    reply.setCookie('accessToken', accessToken, cookieOptions);
+
+    reply.setCookie('refreshToken', refreshToken, cookieOptions);
 
     return { success: true };
   }
@@ -65,21 +63,19 @@ export class AuthController {
       const { accessToken, refreshToken: newRefreshToken } =
         await this.authService.refresh(refreshToken, req);
 
-      reply.setCookie('accessToken', accessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'none',
-        domain: '.theinternetcompany.one',
-        path: '/',
-      });
+      const isProd = process.env.NODE_ENV === 'production';
 
-      reply.setCookie('refreshToken', newRefreshToken, {
+      const cookieOptions = {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'none',
-        domain: '.theinternetcompany.one',
+        secure: isProd, // true only in production (https)
+        sameSite: isProd ? ('none' as const) : ('lax' as const),
+        domain: isProd ? '.theinternetcompany.one' : undefined,
         path: '/',
-      });
+      };
+
+      reply.setCookie('accessToken', accessToken, cookieOptions);
+
+      reply.setCookie('refreshToken', newRefreshToken, cookieOptions);
 
       return { success: true };
     } catch (err) {
@@ -101,16 +97,17 @@ export class AuthController {
       await this.authService.logout(refreshToken);
     }
 
+    const isProd = process.env.NODE_ENV === 'production';
+
     reply.clearCookie('accessToken', {
       path: '/',
-      domain: '.theinternetcompany.one',
+      domain: isProd ? '.theinternetcompany.one' : undefined,
     });
 
     reply.clearCookie('refreshToken', {
       path: '/',
-      domain: '.theinternetcompany.one',
+      domain: isProd ? '.theinternetcompany.one' : undefined,
     });
-
 
     return { success: true };
   }
