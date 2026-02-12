@@ -101,8 +101,16 @@ export class AuthController {
       await this.authService.logout(refreshToken);
     }
 
-    reply.clearCookie('accessToken', { path: '/' });
-    reply.clearCookie('refreshToken', { path: '/' });
+    reply.clearCookie('accessToken', {
+      path: '/',
+      domain: '.theinternetcompany.one',
+    });
+
+    reply.clearCookie('refreshToken', {
+      path: '/',
+      domain: '.theinternetcompany.one',
+    });
+
 
     return { success: true };
   }
