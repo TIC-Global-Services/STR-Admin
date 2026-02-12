@@ -10,6 +10,8 @@ import {
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { Public } from 'src/common/decorators/public.decorator';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { LogoutDto } from './dto/logout.dto';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import type { FastifyReply } from 'fastify';
 
@@ -27,16 +29,16 @@ export class AuthController {
     );
 
     reply.setCookie('accessToken', accessToken, {
-      httpOnly: false,
+      httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'none',
+      sameSite: 'lax',
       path: '/',
     });
 
     reply.setCookie('refreshToken', refreshToken, {
-      httpOnly: false,
+      httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'none',
+      sameSite: 'lax',
       path: '/',
     });
 
@@ -62,16 +64,16 @@ export class AuthController {
         await this.authService.refresh(refreshToken, req);
 
       reply.setCookie('accessToken', accessToken, {
-        httpOnly: false,
+        httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'none',
+        sameSite: 'lax',
         path: '/',
       });
 
       reply.setCookie('refreshToken', newRefreshToken, {
-        httpOnly: false,
+        httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'none',
+        sameSite: 'lax',
         path: '/',
       });
 
