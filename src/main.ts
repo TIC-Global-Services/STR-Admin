@@ -37,6 +37,7 @@ async function bootstrap() {
     origin: [
       'http://localhost:3000',
       'http://127.0.0.1:3000',
+      'https://tic-x-str.vercel.app',
       'https://str-admin.theinternetcompany.one',
     ],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
