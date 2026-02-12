@@ -22,8 +22,11 @@ export class NewsRepository {
       select: {
         id: true,
         title: true,
+        slug:true,
         summary: true,
         content: true,
+        coverImage: true,
+        bannerImage: true,
         isPublished: true,
         publishedAt: true,
         createdAt: true,
@@ -40,6 +43,7 @@ export class NewsRepository {
       select: {
         id: true,
         title: true,
+        coverImage: true,
         isPublished: true,
         createdAt: true,
         publishedAt: true,

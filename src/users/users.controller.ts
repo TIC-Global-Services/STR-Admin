@@ -24,13 +24,10 @@ import { toUserResponse } from './users.mapper';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Get('me')
-  async getCurrentUser(@Request() req) {
-    const userId = req.user.sub;
-
-    const user = await this.usersService.getUserById(userId);
-
-    return toUserResponse(user);
+  @Get()
+  async getAll() {
+    const usersList = await this.usersService.getAllUsers();
+    return usersList;
   }
 
   // -------------------------

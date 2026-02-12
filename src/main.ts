@@ -39,6 +39,8 @@ async function bootstrap() {
       'http://127.0.0.1:3000',
       'https://str-admin.vercel.app',
     ],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
   });
 

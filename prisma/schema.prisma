@@ -160,6 +160,7 @@ model News {
   content     String
 
   coverImage  String?
+  bannerImage String?
   isPublished Boolean  @default(false)
   publishedAt DateTime?
 

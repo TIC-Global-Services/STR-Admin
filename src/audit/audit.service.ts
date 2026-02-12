@@ -5,7 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 export class AuditService {
   constructor(private readonly prisma: PrismaService) {}
 
-  log(data: {
+  async log(data: {
     userId?: string;
     action: string;
     entity: string;
@@ -17,5 +17,57 @@ export class AuditService {
     return this.prisma.auditLog.create({
       data,
     });
+  }
+
+  async getLogs(params: {
+    page?: number;
+    limit?: number;
+    action?: string;
+    entity?: string;
+    userId?: string;
+    from?: string;
+    to?: string;
+  }) {
+    const {
+      page = 1,
+      limit = 20,
+      action,
+      entity,
+      userId,
+      from,
+      to,
+    } = params;
+
+    const where: any = {};
+
+    if (action) where.action = action;
+    if (entity) where.entity = entity;
+    if (userId) where.userId = userId;
+
+    if (from || to) {
+      where.createdAt = {};
+      if (from) where.createdAt.gte = new Date(from);
+      if (to) where.createdAt.lte = new Date(to);
+    }
+
+    const [total, logs] = await Promise.all([
+      this.prisma.auditLog.count({ where }),
+      this.prisma.auditLog.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+    ]);
+
+    return {
+      data: logs,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 }

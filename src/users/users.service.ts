@@ -78,6 +78,10 @@ export class UsersService {
     return this.usersRepo.findByIdForAuth(email);
   }
 
+  getAllUsers(){
+    return this.usersRepo.findManyForList()
+  }
+
   getUserById(id: string) {
     return this.usersRepo.findByIdForView(id);
   }
