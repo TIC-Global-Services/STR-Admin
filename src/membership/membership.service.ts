@@ -46,6 +46,36 @@ export class MembershipService {
     return this.prisma.membership.findMany();
   }
 
+  async findWithFilter(dimension?: string, value?: string) {
+    const where: any = {};
+
+    if (dimension && value) {
+      // Allow only valid fields (security)
+      const allowedDimensions = [
+        'state',
+        'district',
+        'zone',
+        'bloodGroup',
+        'occupation',
+        'status',
+      ];
+
+      if (!allowedDimensions.includes(dimension)) {
+        throw new BadRequestException('Invalid filter dimension');
+      }
+
+      where[dimension] = {
+        equals: value,
+        mode: 'insensitive', // case-insensitive
+      };
+    }
+
+    return this.prisma.membership.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   findApproved() {
     return this.prisma.membership.findMany({
       where: { status: 'APPROVED' },

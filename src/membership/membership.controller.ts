@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   Post,
+  Query,
   Request,
   UseGuards,
 } from '@nestjs/common';
@@ -20,8 +21,11 @@ export class MembershipController {
 
   @Get('all')
   @Permissions('MEMBERSHIP_APPROVE')
-  getAll() {
-    return this.service.findAll();
+  getWithFilter(
+    @Query('dimension') dimension?: string,
+    @Query('value') value?: string,
+  ) {
+    return this.service.findWithFilter(dimension, value);
   }
 
   @Get('pending')
