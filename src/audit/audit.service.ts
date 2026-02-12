@@ -57,11 +57,32 @@ export class AuditService {
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
         take: limit,
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+            },
+          },
+        },
       }),
     ]);
 
+    // Clean response shape
+    const formattedLogs = logs.map((log) => ({
+      id: log.id,
+      action: log.action,
+      entity: log.entity,
+      entityId: log.entityId,
+      metadata: log.metadata,
+      ipAddress: log.ipAddress,
+      userAgent: log.userAgent,
+      createdAt: log.createdAt,
+      email: log.user?.email ?? 'System',
+    }));
+
     return {
-      data: logs,
+      data: formattedLogs,
       meta: {
         total,
         page,
