@@ -79,6 +79,7 @@ export class NewsRepository {
       select: {
         id: true,
         title: true,
+        slug: true,
         summary: true,
         coverImage: true,
         publishedAt: true,
