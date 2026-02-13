@@ -1,4 +1,4 @@
-import { Controller, Get } from "@nestjs/common";
+import { Controller, Get, Param } from "@nestjs/common";
 import { NewsService } from "./news.service";
 import { Public } from "src/common/decorators/public.decorator";
 
@@ -10,5 +10,11 @@ export class NewsPublicController {
   @Get()
   findPublished() {
     return this.service.findPublished();
+  }
+
+  @Public()
+  @Get(":slug")
+  findNewsDetail( @Param('slug') slug: string,) {
+    return this.service.findBySlug(slug);
   }
 }

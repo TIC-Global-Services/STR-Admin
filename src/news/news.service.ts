@@ -78,6 +78,10 @@ export class NewsService {
     return this.repo.findById(id);
   }
 
+  findBySlug(id: string) {
+    return this.repo.findById(id);
+  }
+
   findAllAdmin() {
     return this.repo.findAllAdmin();
   }

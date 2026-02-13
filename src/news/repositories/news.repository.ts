@@ -37,6 +37,27 @@ export class NewsRepository {
     });
   }
 
+  findBySlug(slug: string) {
+    return this.prisma.news.findUnique({
+      where: { slug },
+      select: {
+        id: true,
+        title: true,
+        slug:true,
+        summary: true,
+        content: true,
+        coverImage: true,
+        bannerImage: true,
+        isPublished: true,
+        publishedAt: true,
+        createdAt: true,
+        author: {
+          select: { id: true, email: true },
+        },
+      },
+    });
+  }
+
   findAllAdmin() {
     return this.prisma.news.findMany({
       orderBy: { createdAt: 'desc' },
