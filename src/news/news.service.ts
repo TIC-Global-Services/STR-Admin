@@ -17,11 +17,17 @@ export class NewsService {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '');
 
-    const news = await this.repo.create({
+    const data: any = {
       ...dto,
       slug,
       authorId,
-    });
+    };
+
+    if (dto.isPublished === true) {
+      data.publishedAt = new Date();
+    }
+
+    const news = await this.repo.create(data);
 
     await this.audit.log({
       userId: authorId,
@@ -29,6 +35,15 @@ export class NewsService {
       entity: 'News',
       entityId: news.id,
     });
+
+    if (dto.isPublished === true) {
+      await this.audit.log({
+        userId: authorId,
+        action: 'NEWS_PUBLISH',
+        entity: 'News',
+        entityId: news.id,
+      });
+    }
 
     return news;
   }
