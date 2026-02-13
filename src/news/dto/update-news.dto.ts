@@ -18,6 +18,10 @@ export class UpdateNewsDto {
   coverImage?: string;
 
   @IsOptional()
+  @IsString()
+  bannerImage?: string;
+
+  @IsOptional()
   @IsBoolean()
   isPublished?: boolean;
 }
