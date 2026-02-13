@@ -14,4 +14,11 @@ export class CreateNewsDto {
   @IsOptional()
   @IsString()
   coverImage?: string;
+
+  @IsOptional()
+  @IsString()
+  bannerImage?: string;
+
+  @IsOptional()
+  isPublished?: boolean;
 }
