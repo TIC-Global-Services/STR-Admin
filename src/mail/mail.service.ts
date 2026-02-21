@@ -120,7 +120,13 @@ export class MailService {
 
   async sendNewsAlert(
     members: { name: string; email: string }[],
-    news: { title: string; slug: string; excerpt?: string | null },
+    news: {
+      title: string;
+      slug: string;
+      summary?: string | null;
+      coverImage?: string | null;
+      publishedAt?: Date | null;
+    },
   ) {
     const results = await Promise.allSettled(
       members.map((member) =>
@@ -131,8 +137,17 @@ export class MailService {
           context: {
             name: member.name,
             title: news.title,
-            excerpt: news.excerpt ?? '',
+            summary: news.summary ?? '',
             slug: news.slug,
+            coverImage:
+              news.coverImage ?? 'https://silambarasantr.com/default-news.jpg',
+            date: news.publishedAt
+              ? news.publishedAt.toLocaleDateString('en-IN', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                })
+              : new Date().toLocaleDateString('en-IN'),
             siteUrl: process.env.SITE_URL ?? 'https://silambarasantr.com',
             year: new Date().getFullYear(),
           },

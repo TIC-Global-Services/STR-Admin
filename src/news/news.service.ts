@@ -48,9 +48,9 @@ export class NewsService {
         entityId: news.id,
       });
 
-      this.sendNewsAlertToMembers(news).catch((err) =>
-        console.error('News alert emails failed:', err),
-      );
+      // this.sendNewsAlertToMembers(news).catch((err) =>
+      //   console.error('News alert emails failed:', err),
+      // );
     }
 
     return news;
@@ -68,9 +68,9 @@ export class NewsService {
         entityId: id,
       });
 
-      this.sendNewsAlertToMembers({ id, ...data }).catch((err) =>
-        console.error('News alert emails failed:', err),
-      );
+      // this.sendNewsAlertToMembers({ id, ...data }).catch((err) =>
+      //   console.error('News alert emails failed:', err),
+      // );
     }
 
     if (dto.isPublished === false) {
@@ -87,23 +87,29 @@ export class NewsService {
   }
 
   private async sendNewsAlertToMembers(news: {
-    title: string;
-    slug: string;
-    coverImage: string | null;
-    excerpt?: string | null;
-  }) {
-    const members = await this.prisma.membership.findMany({
-      where: { status: 'APPROVED' },
-      select: { fullName: true, email: true },
-    });
+  title: string;
+  slug: string;
+  coverImage: string | null;
+  excerpt?: string | null;
+}) {
+  console.log('📢 Sending news alert...');
 
-    if (members.length === 0) return;
+  const members = await this.prisma.membership.findMany({
+    where: { status: 'APPROVED' },
+    select: { fullName: true, email: true },
+  });
 
-    await this.mailService.sendNewsAlert(
-      members.map((m) => ({ name: m.fullName, email: m.email })),
-      news,
-    );
-  }
+  console.log('Members found:', members.length);
+
+  if (members.length === 0) return;
+
+  await this.mailService.sendNewsAlert(
+    members.map((m) => ({ name: m.fullName, email: m.email })),
+    news,
+  );
+
+  console.log('✅ Mail service executed');
+}
 
   findById(id: string) {
     return this.repo.findById(id);
