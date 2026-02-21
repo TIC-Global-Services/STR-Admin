@@ -70,34 +70,48 @@ export class MembershipService {
   }
 
   async verify(memberId: string) {
-    const member = await this.prisma.membership.findUnique({
-      where: { uniqueMemberId: memberId },
-      select: {
-        uniqueMemberId: true,
-        fullName: true,
-        district: true,
-        status: true,
-        createdAt: true,
-      },
-    });
+  const member = await this.prisma.membership.findUnique({
+    where: { uniqueMemberId: memberId },
+    select: {
+      uniqueMemberId: true,
+      fullName: true,
+      zone: true,
+      district: true,
+      state: true,
+      status: true,
+      createdAt: true,
+      reviewedAt: true,
+    },
+  });
 
-    if (!member) {
-      return {
-        valid: false,
-        message: 'Invalid Membership ID',
-      };
-    }
-
+  if (!member) {
     return {
-      valid: true,
-      membershipId: member.uniqueMemberId,
-      fullName: member.fullName,
-      district: member.district,
-      status: member.status,
-      year: member.createdAt.getFullYear(),
+      valid: false,
+      message: 'Invalid Membership ID',
     };
   }
 
+  // If you only want ID card for APPROVED users
+  if (member.status !== 'APPROVED') {
+    return {
+      valid: false,
+      message: 'Membership not approved',
+      status: member.status,
+    };
+  }
+
+  return {
+    valid: true,
+    membershipId: member.uniqueMemberId,
+    fullName: member.fullName,
+    zone: member.zone,
+    district: member.district,
+    state: member.state,
+    status: member.status,
+    membershipYear: member.createdAt.getFullYear(),
+    verifiedAt: member.reviewedAt,
+  };
+}
   private async sendMembershipEmails(member: any) {
     const adminEmail = process.env.ADMIN_EMAIL;
 
