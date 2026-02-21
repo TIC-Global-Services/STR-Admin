@@ -1,10 +1,14 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ApplyMembershipDto } from './dto/apply-membership.dto';
+import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
 export class MembershipService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mailService: MailService,
+  ) {}
 
   // -------------------------
   // APPLY (PUBLIC)
@@ -49,13 +53,20 @@ export class MembershipService {
     const paddedNumber = String(nextNumber).padStart(7, '0');
     const uniqueMemberId = `${prefix}${paddedNumber}`;
 
-    return this.prisma.membership.create({
+    const member = await this.prisma.membership.create({
       data: {
         ...dto,
         dob: new Date(dto.dob),
         uniqueMemberId,
       },
     });
+
+    // 🔥 Send emails (non-blocking)
+    this.sendMembershipEmails(member).catch((err) => {
+      console.error('Email sending failed:', err);
+    });
+
+    return member;
   }
 
   async verify(memberId: string) {
@@ -87,6 +98,23 @@ export class MembershipService {
     };
   }
 
+  private async sendMembershipEmails(member: any) {
+    const adminEmail = process.env.ADMIN_EMAIL;
+
+    await Promise.allSettled([
+      this.mailService.sendMemberConfirmation({
+        name: member.fullName,
+        email: member.email,
+        uniqueMemberId: member.uniqueMemberId,
+      }),
+      this.mailService.sendAdminNotification(adminEmail!, {
+        name: member.fullName,
+        email: member.email,
+        phone: member.phone,
+        uniqueMemberId: member.uniqueMemberId,
+      }),
+    ]);
+  }
   // -------------------------
   // LIST PENDING (ADMIN)
   // -------------------------
@@ -149,7 +177,7 @@ export class MembershipService {
   // APPROVE
   // -------------------------
   async approve(id: string, adminId: string) {
-    return this.prisma.membership.update({
+    const member = await this.prisma.membership.update({
       where: { id },
       data: {
         status: 'APPROVED',
@@ -157,13 +185,20 @@ export class MembershipService {
         reviewedAt: new Date(),
       },
     });
+
+    this.mailService
+      .sendMembershipApproved({
+        name: member.fullName,
+        email: member.email,
+        uniqueMemberId: member.uniqueMemberId,
+      })
+      .catch((err) => console.error('Approval email failed:', err));
+
+    return member;
   }
 
-  // -------------------------
-  // REJECT
-  // -------------------------
   async reject(id: string, adminId: string, reason: string) {
-    return this.prisma.membership.update({
+    const member = await this.prisma.membership.update({
       where: { id },
       data: {
         status: 'REJECTED',
@@ -172,5 +207,15 @@ export class MembershipService {
         reviewedAt: new Date(),
       },
     });
+
+    this.mailService
+      .sendMembershipRejected({
+        name: member.fullName,
+        email: member.email,
+        reason,
+      })
+      .catch((err) => console.error('Rejection email failed:', err));
+
+    return member;
   }
 }

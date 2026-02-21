@@ -12,6 +12,7 @@ import { AuditLogInterceptor } from './audit/audit.interceptor';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { NewsModule } from './news/news.module';
 import { SocialPostsModule } from './social_posts/social_posts.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { SocialPostsModule } from './social_posts/social_posts.module';
     AnalyticsModule,
     NewsModule,
     SocialPostsModule,
+    MailModule,
   ],
   controllers: [AppController],
   providers: [

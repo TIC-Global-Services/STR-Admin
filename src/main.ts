@@ -36,6 +36,7 @@ async function bootstrap() {
   await app.register(import('@fastify/cors'), {
     origin: [
       'http://localhost:3000',
+      'http://localhost:3001',
       'http://127.0.0.1:3000',
       'https://tic-x-str.vercel.app',
       'https://str-admin.theinternetcompany.one',

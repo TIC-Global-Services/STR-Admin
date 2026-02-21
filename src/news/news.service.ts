@@ -3,12 +3,16 @@ import { NewsRepository } from './repositories/news.repository';
 import { AuditService } from 'src/audit/audit.service';
 import { CreateNewsDto } from './dto/create-news.dto';
 import { UpdateNewsDto } from './dto/update-news.dto';
+import { MailService } from 'src/mail/mail.service';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class NewsService {
   constructor(
     private readonly repo: NewsRepository,
     private readonly audit: AuditService,
+    private readonly mailService: MailService,
+    private readonly prisma: PrismaService,
   ) {}
 
   async create(dto: CreateNewsDto, authorId: string) {
@@ -43,6 +47,10 @@ export class NewsService {
         entity: 'News',
         entityId: news.id,
       });
+
+      this.sendNewsAlertToMembers(news).catch((err) =>
+        console.error('News alert emails failed:', err),
+      );
     }
 
     return news;
@@ -59,6 +67,10 @@ export class NewsService {
         entity: 'News',
         entityId: id,
       });
+
+      this.sendNewsAlertToMembers({ id, ...data }).catch((err) =>
+        console.error('News alert emails failed:', err),
+      );
     }
 
     if (dto.isPublished === false) {
@@ -72,6 +84,25 @@ export class NewsService {
     }
 
     return this.repo.update(id, data);
+  }
+
+  private async sendNewsAlertToMembers(news: {
+    title: string;
+    slug: string;
+    coverImage: string | null;
+    excerpt?: string | null;
+  }) {
+    const members = await this.prisma.membership.findMany({
+      where: { status: 'APPROVED' },
+      select: { fullName: true, email: true },
+    });
+
+    if (members.length === 0) return;
+
+    await this.mailService.sendNewsAlert(
+      members.map((m) => ({ name: m.fullName, email: m.email })),
+      news,
+    );
   }
 
   findById(id: string) {
