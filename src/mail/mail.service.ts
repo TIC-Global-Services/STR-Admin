@@ -133,6 +133,7 @@ export class MailService {
             title: news.title,
             excerpt: news.excerpt ?? '',
             slug: news.slug,
+            siteUrl: process.env.SITE_URL ?? 'https://silambarasantr.com',
             year: new Date().getFullYear(),
           },
         }),
