@@ -5,6 +5,99 @@ import { MailerService } from '@nestjs-modules/mailer';
 export class MailService {
   constructor(private readonly mailerService: MailerService) {}
 
+  async sendOtpEmail(data: { email: string; otp: string }) {
+  try {
+    await this.mailerService.sendMail({
+      to: data.email,
+      subject: '🔐 STR Membership Email Verification Code',
+      html: `
+        <div style="
+          font-family: 'Segoe UI', Arial, sans-serif;
+          background-color: #f4f4f4;
+          padding: 40px 20px;
+        ">
+          <div style="
+            max-width: 500px;
+            margin: auto;
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 40px 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            text-align: center;
+          ">
+            
+            <h2 style="
+              margin: 0 0 10px;
+              font-size: 22px;
+              color: #111;
+              letter-spacing: 1px;
+            ">
+              STR Fan Community
+            </h2>
+
+            <p style="
+              font-size: 14px;
+              color: #555;
+              margin-bottom: 30px;
+            ">
+              Please use the verification code below to complete your membership registration.
+            </p>
+
+            <div style="
+              font-size: 32px;
+              font-weight: bold;
+              letter-spacing: 8px;
+              background: #000;
+              color: #fff;
+              padding: 15px 20px;
+              border-radius: 10px;
+              display: inline-block;
+              margin-bottom: 25px;
+            ">
+              ${data.otp}
+            </div>
+
+            <p style="
+              font-size: 13px;
+              color: #666;
+              margin-bottom: 10px;
+            ">
+              ⏳ This OTP is valid for <strong>5 minutes</strong>.
+            </p>
+
+            <p style="
+              font-size: 12px;
+              color: #999;
+              margin-top: 25px;
+            ">
+              If you did not request this verification, you can safely ignore this email.
+            </p>
+
+            <hr style="
+              border: none;
+              border-top: 1px solid #eee;
+              margin: 30px 0;
+            " />
+
+            <p style="
+              font-size: 11px;
+              color: #aaa;
+            ">
+              © ${new Date().getFullYear()} STR Fan Community. All rights reserved.
+            </p>
+
+          </div>
+        </div>
+      `,
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error('OTP email send error:', error);
+    throw error;
+  }
+}
+
   async sendMail(to: string, subject: string, html: string) {
     try {
       await this.mailerService.sendMail({ to, subject, html });

@@ -105,6 +105,22 @@ model AuthSession {
   @@map("auth_sessions")
 }
 
+model OtpVerification {
+  id        String   @id @default(uuid())
+  target    String   // email OR phone
+  type      OtpType  // EMAIL or PHONE
+  otp       String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([target])
+}
+
+enum OtpType {
+  EMAIL
+  PHONE
+}
+
 model Membership {
   id             String @id @default(uuid())
   uniqueMemberId String? @unique
@@ -119,6 +135,9 @@ model Membership {
   // Contact
   email String
   phone String
+
+  emailVerified Boolean @default(false)
+  phoneVerified Boolean @default(false)  
 
   // Location
   address  String
@@ -146,6 +165,10 @@ model Membership {
   @@index([email])
   @@index([phone])
 }
+
+
+
+
 
 model News {
   id String @id @default(uuid())

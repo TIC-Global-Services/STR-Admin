@@ -13,6 +13,8 @@ import { AnalyticsModule } from './analytics/analytics.module';
 import { NewsModule } from './news/news.module';
 import { SocialPostsModule } from './social_posts/social_posts.module';
 import { MailModule } from './mail/mail.module';
+import { OtpService } from './otp/otp.service';
+import { OtpModule } from './otp/otp.module';
 
 @Module({
   imports: [
@@ -28,10 +30,12 @@ import { MailModule } from './mail/mail.module';
     NewsModule,
     SocialPostsModule,
     MailModule,
+    OtpModule,
   ],
   controllers: [AppController],
   providers: [
     AppService,
+    OtpService,
   ],
 })
 export class AppModule {}

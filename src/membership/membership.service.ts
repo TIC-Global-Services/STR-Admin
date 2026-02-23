@@ -2,12 +2,14 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ApplyMembershipDto } from './dto/apply-membership.dto';
 import { MailService } from 'src/mail/mail.service';
+import { OtpService } from 'src/otp/otp.service';
 
 @Injectable()
 export class MembershipService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly mailService: MailService,
+    private readonly otpService: OtpService,
   ) {}
 
   // -------------------------
@@ -27,6 +29,10 @@ export class MembershipService {
     if (exists) {
       throw new BadRequestException('Membership already exists');
     }
+
+    if (!dto.email) {
+  throw new BadRequestException('Email required');
+}
 
     const year = new Date().getFullYear();
     const prefix = `STRFC-${year}-`;
