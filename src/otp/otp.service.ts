@@ -88,9 +88,7 @@ export class OtpService {
         type,
         verified: false,
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      orderBy: { createdAt: 'desc' },
     });
 
     if (!record) {
@@ -116,15 +114,13 @@ export class OtpService {
     if (record.otp !== otp) {
       await this.prisma.otpVerification.update({
         where: { id: record.id },
-        data: {
-          attempts: { increment: 1 },
-        },
+        data: { attempts: { increment: 1 } },
       });
 
       throw new BadRequestException('Invalid OTP');
     }
 
-    // Mark verified instead of deleting
+    // ✅ Mark verified permanently
     await this.prisma.otpVerification.update({
       where: { id: record.id },
       data: {
@@ -145,13 +141,8 @@ export class OtpService {
         target,
         type,
         verified: true,
-        expiresAt: {
-          gte: new Date(),
-        },
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      orderBy: { createdAt: 'desc' },
     });
 
     return !!record;

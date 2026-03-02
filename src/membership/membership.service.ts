@@ -15,114 +15,112 @@ export class MembershipService {
   // -------------------------
   // APPLY (PUBLIC)
   // -------------------------
- async apply(dto: ApplyMembershipDto) {
-  // 1️⃣ Check consent
-  if (!dto.agreeTerms || !dto.ageConfirm) {
-    throw new BadRequestException(
-      'You must accept terms and confirm age.',
-    );
-  }
+  async apply(dto: ApplyMembershipDto) {
+    // 1️⃣ Check consent
+    if (!dto.agreeTerms || !dto.ageConfirm) {
+      throw new BadRequestException('You must accept terms and confirm age.');
+    }
 
-  // 2️⃣ Check email verified
-  const isVerified = await this.otpService.isVerified(dto.email, 'EMAIL');
+    // 2️⃣ Check email verified
+    const isVerified = await this.otpService.isVerified(dto.email, 'EMAIL');
 
-  if (!isVerified) {
-    throw new BadRequestException('Email not verified.');
-  }
+    if (!isVerified) {
+      throw new BadRequestException('Email not verified.');
+    }
 
-  // 3️⃣ Prevent duplicates
-  const exists = await this.prisma.membership.findFirst({
-    where: {
-      OR: [
-        { email: dto.email },
-        { phone: dto.phone },
-        { aadhaarNumber: dto.aadhaarNumber },
-      ],
-    },
-  });
-
-  if (exists) {
-    throw new BadRequestException('Membership already exists');
-  }
-
-  // 4️⃣ Generate Unique ID safely (transaction)
-  const member = await this.prisma.$transaction(async (tx) => {
-    const year = new Date().getFullYear();
-    const prefix = `STRFC-${year}-`;
-
-    const count = await tx.membership.count({
+    // 3️⃣ Prevent duplicates
+    const exists = await this.prisma.membership.findFirst({
       where: {
-        uniqueMemberId: {
-          startsWith: prefix,
+        OR: [
+          { email: dto.email },
+          { phone: dto.phone },
+          { aadhaarNumber: dto.aadhaarNumber },
+        ],
+      },
+    });
+
+    if (exists) {
+      throw new BadRequestException('Membership already exists');
+    }
+
+    // 4️⃣ Generate Unique ID safely (transaction)
+    const member = await this.prisma.$transaction(async (tx) => {
+      const year = new Date().getFullYear();
+      const prefix = `STRFC-${year}-`;
+
+      const count = await tx.membership.count({
+        where: {
+          uniqueMemberId: {
+            startsWith: prefix,
+          },
         },
-      },
+      });
+
+      const nextNumber = count + 1;
+      const paddedNumber = String(nextNumber).padStart(7, '0');
+      const uniqueMemberId = `${prefix}${paddedNumber}`;
+
+      return tx.membership.create({
+        data: {
+          ...dto,
+          dob: new Date(dto.dob),
+          uniqueMemberId,
+          emailVerified: true,
+        },
+      });
     });
 
-    const nextNumber = count + 1;
-    const paddedNumber = String(nextNumber).padStart(7, '0');
-    const uniqueMemberId = `${prefix}${paddedNumber}`;
+    this.sendMembershipEmails(member).catch(console.error);
 
-    return tx.membership.create({
-      data: {
-        ...dto,
-        dob: new Date(dto.dob),
-        uniqueMemberId,
-        emailVerified: true,
-      },
-    });
-  });
-
-  this.sendMembershipEmails(member).catch(console.error);
-
-  return {
-    message: 'Application submitted successfully',
-    membershipId: member.uniqueMemberId,
-  };
-}
+    return {
+      message: 'Application submitted successfully',
+      membershipId: member.uniqueMemberId,
+    };
+  }
 
   async verify(memberId: string) {
-  const member = await this.prisma.membership.findUnique({
-    where: { uniqueMemberId: memberId },
-    select: {
-      uniqueMemberId: true,
-      fullName: true,
-      zone: true,
-      district: true,
-      state: true,
-      status: true,
-      createdAt: true,
-      reviewedAt: true,
-    },
-  });
+    const member = await this.prisma.membership.findUnique({
+      where: { uniqueMemberId: memberId },
+      select: {
+        uniqueMemberId: true,
+        fullName: true,
+        zone: true,
+        district: true,
+        state: true,
+        status: true,
+        createdAt: true,
+        reviewedAt: true,
+      },
+    });
 
-  if (!member) {
-    return {
-      valid: false,
-      message: 'Invalid Membership ID',
-    };
-  }
+    if (!member) {
+      return {
+        valid: false,
+        message: 'Invalid Membership ID',
+      };
+    }
 
-  // If you only want ID card for APPROVED users
-  if (member.status !== 'APPROVED') {
+    // If you only want ID card for APPROVED users
+    if (member.status !== 'APPROVED') {
+      return {
+        valid: false,
+        message: 'Membership not approved',
+        status: member.status,
+      };
+    }
+
     return {
-      valid: false,
-      message: 'Membership not approved',
+      valid: true,
+      membershipId: member.uniqueMemberId,
+      fullName: member.fullName,
+      zone: member.zone,
+      district: member.district,
+      state: member.state,
       status: member.status,
+      membershipYear: member.createdAt.getFullYear(),
+      verifiedAt: member.reviewedAt,
     };
   }
-
-  return {
-    valid: true,
-    membershipId: member.uniqueMemberId,
-    fullName: member.fullName,
-    zone: member.zone,
-    district: member.district,
-    state: member.state,
-    status: member.status,
-    membershipYear: member.createdAt.getFullYear(),
-    verifiedAt: member.reviewedAt,
-  };
-}
   private async sendMembershipEmails(member: any) {
     const adminEmail = process.env.ADMIN_EMAIL;
 

@@ -32,7 +32,7 @@ export class MailService {
               color: #111;
               letter-spacing: 1px;
             ">
-              STR Fan Community
+              STR Fan Club Membership Verification
             </h2>
 
             <p style="
@@ -83,7 +83,7 @@ export class MailService {
               font-size: 11px;
               color: #aaa;
             ">
-              © ${new Date().getFullYear()} STR Fan Community. All rights reserved.
+              © ${new Date().getFullYear()} STR Fans Club. All rights reserved.
             </p>
 
           </div>
