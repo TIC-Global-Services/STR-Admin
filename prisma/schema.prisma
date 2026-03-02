@@ -65,6 +65,9 @@ model RolePermission {
 
 model User {
   id       String  @id @default(uuid())
+  firstname String? 
+  lastname  String?
+  phone    String?  @unique
   email    String  @unique
   password String
   isActive Boolean @default(true)
@@ -107,13 +110,15 @@ model AuthSession {
 
 model OtpVerification {
   id        String   @id @default(uuid())
-  target    String   // email OR phone
-  type      OtpType  // EMAIL or PHONE
+  target    String
+  type      OtpType
   otp       String
+  verified  Boolean  @default(false)
+  attempts  Int      @default(0)
   expiresAt DateTime
   createdAt DateTime @default(now())
 
-  @@index([target])
+  @@index([target, type])
 }
 
 enum OtpType {
@@ -126,30 +131,43 @@ model Membership {
   uniqueMemberId String? @unique
 
   // Personal Identity
-  fullName     String
-  dob          DateTime
-  bloodGroup   String?
-  occupation   String
-  aadharNumber String   @unique
+  fullName        String
+  dob             DateTime
+  bloodGroup      String?
+  occupation      String?
+  aadhaarNumber   String   @unique
 
   // Contact
-  email String
-  phone String
-
-  emailVerified Boolean @default(false)
-  phoneVerified Boolean @default(false)  
+  email           String   @unique
+  phone           String   @unique
+  emailVerified   Boolean  @default(false)
+  phoneVerified   Boolean  @default(false)
 
   // Location
-  address  String
-  zone     String
-  district String
-  state    String
+  country         String
+  state           String
+  city            String
+  zone            String?
+  district        String?
 
-  // Social
-  instagramId String?
-  xTwitterId  String?
+  // Fan Details
+  existingClub    String?
+  fanClubName     String?
+  chapterLocation String?
+  willingToJoin   String?
+  chapterLead     String?
+  fanDuration     String?
+  favoriteMovie   String?
+  favoriteSong    String?
+  socialHandle    String?
+  tshirtSize      String?
+  membershipType  String
 
-  // Membership workflow
+  // Consent
+  agreeTerms  Boolean
+  ageConfirm  Boolean
+
+  // Workflow
   status          MembershipStatus @default(PENDING)
   reviewedById    String?
   reviewedAt      DateTime?
@@ -162,12 +180,9 @@ model Membership {
   reviewedBy User? @relation(fields: [reviewedById], references: [id])
 
   @@index([status])
-  @@index([email])
-  @@index([phone])
+  @@index([state])
+  @@index([district])
 }
-
-
-
 
 
 model News {

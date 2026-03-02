@@ -26,12 +26,11 @@ export class OtpService {
       throw new BadRequestException('Target is required');
     }
 
-    // Basic email validation
     if (type === 'EMAIL' && !target.includes('@')) {
       throw new BadRequestException('Invalid email');
     }
 
-    // Cooldown: 60 seconds
+    // 60s cooldown
     const recentOtp = await this.prisma.otpVerification.findFirst({
       where: {
         target,
@@ -44,13 +43,17 @@ export class OtpService {
 
     if (recentOtp) {
       throw new BadRequestException(
-        'OTP already sent. Please wait before requesting again.',
+        'OTP already sent. Please wait 60 seconds.',
       );
     }
 
-    // Delete old OTPs for this target
+    // Remove old unverified OTPs
     await this.prisma.otpVerification.deleteMany({
-      where: { target, type },
+      where: {
+        target,
+        type,
+        verified: false,
+      },
     });
 
     const otp = this.generateOtp();
@@ -60,7 +63,7 @@ export class OtpService {
         target,
         type,
         otp,
-        expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 mins
+        expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 minutes
       },
     });
 
@@ -71,24 +74,27 @@ export class OtpService {
       });
     }
 
-    if (type === 'PHONE') {
-      // Future SMS integration
-      // await this.smsService.sendOtp(target, otp);
-    }
-
     return { message: 'OTP sent successfully' };
   }
 
   /* ================================
      VERIFY OTP
   ================================= */
+
   async verifyOtp(target: string, otp: string, type: 'EMAIL' | 'PHONE') {
     const record = await this.prisma.otpVerification.findFirst({
-      where: { target, otp, type },
+      where: {
+        target,
+        type,
+        verified: false,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
     });
 
     if (!record) {
-      throw new BadRequestException('Invalid OTP');
+      throw new BadRequestException('No active OTP found');
     }
 
     if (record.expiresAt < new Date()) {
@@ -98,15 +104,61 @@ export class OtpService {
       throw new BadRequestException('OTP expired');
     }
 
-    await this.prisma.otpVerification.delete({
+    if (record.attempts >= 5) {
+      await this.prisma.otpVerification.delete({
+        where: { id: record.id },
+      });
+      throw new BadRequestException(
+        'Too many incorrect attempts. Please request a new OTP.',
+      );
+    }
+
+    if (record.otp !== otp) {
+      await this.prisma.otpVerification.update({
+        where: { id: record.id },
+        data: {
+          attempts: { increment: 1 },
+        },
+      });
+
+      throw new BadRequestException('Invalid OTP');
+    }
+
+    // Mark verified instead of deleting
+    await this.prisma.otpVerification.update({
       where: { id: record.id },
+      data: {
+        verified: true,
+      },
     });
 
     return { message: `${type} verified successfully` };
   }
 
   /* ================================
-     CLEAN EXPIRED OTPs (Optional Cron)
+     CHECK IF VERIFIED
+  ================================= */
+
+  async isVerified(target: string, type: 'EMAIL' | 'PHONE') {
+    const record = await this.prisma.otpVerification.findFirst({
+      where: {
+        target,
+        type,
+        verified: true,
+        expiresAt: {
+          gte: new Date(),
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    return !!record;
+  }
+
+  /* ================================
+     CLEAN EXPIRED OTPs (Cron Safe)
   ================================= */
 
   async cleanExpiredOtps() {

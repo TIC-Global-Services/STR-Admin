@@ -15,6 +15,8 @@ import { SocialPostsModule } from './social_posts/social_posts.module';
 import { MailModule } from './mail/mail.module';
 import { OtpService } from './otp/otp.service';
 import { OtpModule } from './otp/otp.module';
+import { ResendModule } from './resend/resend.module';
+import { QueueModule } from './queue/queue.module';
 
 @Module({
   imports: [
@@ -31,6 +33,8 @@ import { OtpModule } from './otp/otp.module';
     SocialPostsModule,
     MailModule,
     OtpModule,
+    ResendModule,
+    QueueModule,
   ],
   controllers: [AppController],
   providers: [

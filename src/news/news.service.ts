@@ -5,14 +5,17 @@ import { CreateNewsDto } from './dto/create-news.dto';
 import { UpdateNewsDto } from './dto/update-news.dto';
 import { MailService } from 'src/mail/mail.service';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { ResendService } from 'src/resend/resend.service';
+import { NewsQueue } from './news.queue';
 
 @Injectable()
 export class NewsService {
   constructor(
     private readonly repo: NewsRepository,
     private readonly audit: AuditService,
-    private readonly mailService: MailService,
+    private readonly resendService: ResendService,
     private readonly prisma: PrismaService,
+    private readonly newsQueue: NewsQueue,
   ) {}
 
   async create(dto: CreateNewsDto, authorId: string) {
@@ -48,9 +51,7 @@ export class NewsService {
         entityId: news.id,
       });
 
-      // this.sendNewsAlertToMembers(news).catch((err) =>
-      //   console.error('News alert emails failed:', err),
-      // );
+      await this.newsQueue.addNewsJob(news);
     }
 
     return news;
@@ -68,9 +69,7 @@ export class NewsService {
         entityId: id,
       });
 
-      // this.sendNewsAlertToMembers({ id, ...data }).catch((err) =>
-      //   console.error('News alert emails failed:', err),
-      // );
+      await this.newsQueue.addNewsJob({ ...dto, id });
     }
 
     if (dto.isPublished === false) {
@@ -87,29 +86,68 @@ export class NewsService {
   }
 
   private async sendNewsAlertToMembers(news: {
-  title: string;
-  slug: string;
-  coverImage: string | null;
-  excerpt?: string | null;
-}) {
-  console.log('📢 Sending news alert...');
+    title: string;
+    slug: string;
+    coverImage: string | null;
+    excerpt?: string | null;
+  }) {
+    console.log('📢 Sending personalized news alert...');
 
-  const members = await this.prisma.membership.findMany({
-    where: { status: 'APPROVED' },
-    select: { fullName: true, email: true },
-  });
+    const members = await this.prisma.membership.findMany({
+      where: { status: 'APPROVED' },
+      select: { fullName: true, email: true },
+    });
 
-  console.log('Members found:', members.length);
+    if (members.length === 0) return;
 
-  if (members.length === 0) return;
+    console.log('Members found:', members.length);
 
-  await this.mailService.sendNewsAlert(
-    members.map((m) => ({ name: m.fullName, email: m.email })),
-    news,
-  );
+    const siteUrl = process.env.SITE_URL ?? 'https://silambarasantr.com';
 
-  console.log('✅ Mail service executed');
-}
+    await this.resendService.sendTemplateBulk(
+      members.map((m) => ({
+        email: m.email,
+        data: {
+          name: m.fullName,
+        },
+      })),
+      `🎬 New Update – ${news.title}`,
+      (data) => `
+      <div style="font-family: Arial, sans-serif; padding: 20px;">
+        <h2>Vanakkam ${data.name} 👋</h2>
+
+        <h3>${news.title}</h3>
+
+        <p>${news.excerpt ?? ''}</p>
+
+        ${
+          news.coverImage
+            ? `<img src="${news.coverImage}" 
+                 style="max-width:100%; border-radius:10px;" />`
+            : ''
+        }
+
+        <br/><br/>
+
+        <a href="${siteUrl}/news/${news.slug}"
+           style="background:#000;color:#fff;
+                  padding:10px 20px;
+                  border-radius:8px;
+                  text-decoration:none;">
+          Read Full Update
+        </a>
+
+        <hr style="margin-top:30px;" />
+
+        <p style="font-size:12px;color:#777;">
+          © ${new Date().getFullYear()} STR Fan Community
+        </p>
+      </div>
+    `,
+    );
+
+    console.log('✅ Personalized Resend bulk executed');
+  }
 
   findById(id: string) {
     return this.repo.findById(id);

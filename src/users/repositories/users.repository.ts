@@ -88,11 +88,15 @@ export class UsersRepository {
   }
 
   // CREATE USER
-  createUser(data: { email: string; password: string }) {
+  createUser(data: { firstname: string; lastname: string; phone: string; email: string; password: string }) {
     return this.prisma.user.create({
       data,
       select: {
         id: true,
+        firstname: true,
+        lastname: true,
+        phone: true,
+        email: true,
       },
     });
   }
@@ -100,13 +104,17 @@ export class UsersRepository {
   // UPDATE USER
   updateUser(
     id: string,
-    data: Partial<{ password: string; isActive: boolean }>,
+    data: Partial<{ firstname: string; lastname: string; password: string; isActive: boolean }>,
   ) {
     return this.prisma.user.update({
       where: { id },
       data,
       select: {
         id: true,
+        firstname: true,
+        lastname: true,
+        email: true,
+        isActive: true,
       },
     });
   }
@@ -136,6 +144,9 @@ export class UsersRepository {
       orderBy: { createdAt: 'desc' },
       select: {
         id: true,
+        firstname: true,
+        lastname: true,
+        phone: true,
         email: true,
         isActive: true,
         createdAt: true,

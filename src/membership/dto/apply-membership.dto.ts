@@ -3,10 +3,14 @@ import {
   IsEmail,
   IsDateString,
   IsOptional,
+  IsBoolean,
+  IsNotEmpty,
 } from 'class-validator';
 
 export class ApplyMembershipDto {
+  // ───────── Personal ─────────
   @IsString()
+  @IsNotEmpty()
   fullName: string;
 
   @IsDateString()
@@ -17,34 +21,74 @@ export class ApplyMembershipDto {
   bloodGroup?: string;
 
   @IsString()
-  occupation: string;
+  @IsNotEmpty()
+  aadhaarNumber: string;
 
-  @IsString()
-  aadharNumber: string;
-
+  // ───────── Contact ─────────
   @IsEmail()
   email: string;
 
   @IsString()
   phone: string;
 
+  // ───────── Location ─────────
   @IsString()
-  address: string;
-
-  @IsString()
-  zone: string;
-
-  @IsString()
-  district: string;
+  country: string;
 
   @IsString()
   state: string;
 
+  @IsString()
+  city: string;
+
+  // ───────── Fan Info ─────────
   @IsOptional()
   @IsString()
-  instagramId?: string;
+  existingClub?: string;
 
   @IsOptional()
   @IsString()
-  xTwitterId?: string;
+  fanClubName?: string;
+
+  @IsOptional()
+  @IsString()
+  chapterLocation?: string;
+
+  @IsOptional()
+  @IsString()
+  willingToJoin?: string;
+
+  @IsOptional()
+  @IsString()
+  chapterLead?: string;
+
+  @IsOptional()
+  @IsString()
+  fanDuration?: string;
+
+  @IsOptional()
+  @IsString()
+  favoriteMovie?: string;
+
+  @IsOptional()
+  @IsString()
+  favoriteSong?: string;
+
+  @IsOptional()
+  @IsString()
+  socialHandle?: string;
+
+  @IsOptional()
+  @IsString()
+  tshirtSize?: string;
+
+  @IsString()
+  membershipType: string;
+
+  // ───────── Consent ─────────
+  @IsBoolean()
+  agreeTerms: boolean;
+
+  @IsBoolean()
+  ageConfirm: boolean;
 }

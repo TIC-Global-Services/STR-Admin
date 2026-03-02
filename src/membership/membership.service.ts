@@ -15,65 +15,70 @@ export class MembershipService {
   // -------------------------
   // APPLY (PUBLIC)
   // -------------------------
-  async apply(dto: ApplyMembershipDto) {
-    const exists = await this.prisma.membership.findFirst({
-      where: {
-        OR: [
-          { email: dto.email },
-          { phone: dto.phone },
-          { aadharNumber: dto.aadharNumber },
-        ],
-      },
-    });
+ async apply(dto: ApplyMembershipDto) {
+  // 1️⃣ Check consent
+  if (!dto.agreeTerms || !dto.ageConfirm) {
+    throw new BadRequestException(
+      'You must accept terms and confirm age.',
+    );
+  }
 
-    if (exists) {
-      throw new BadRequestException('Membership already exists');
-    }
+  // 2️⃣ Check email verified
+  const isVerified = await this.otpService.isVerified(dto.email, 'EMAIL');
 
-    if (!dto.email) {
-  throw new BadRequestException('Email required');
-}
+  if (!isVerified) {
+    throw new BadRequestException('Email not verified.');
+  }
 
+  // 3️⃣ Prevent duplicates
+  const exists = await this.prisma.membership.findFirst({
+    where: {
+      OR: [
+        { email: dto.email },
+        { phone: dto.phone },
+        { aadhaarNumber: dto.aadhaarNumber },
+      ],
+    },
+  });
+
+  if (exists) {
+    throw new BadRequestException('Membership already exists');
+  }
+
+  // 4️⃣ Generate Unique ID safely (transaction)
+  const member = await this.prisma.$transaction(async (tx) => {
     const year = new Date().getFullYear();
     const prefix = `STRFC-${year}-`;
 
-    const lastMember = await this.prisma.membership.findFirst({
+    const count = await tx.membership.count({
       where: {
         uniqueMemberId: {
           startsWith: prefix,
         },
       },
-      orderBy: { createdAt: 'desc' },
-      select: { uniqueMemberId: true },
     });
 
-    let nextNumber = 1;
-
-    if (lastMember?.uniqueMemberId) {
-      const lastNumber = parseInt(
-        lastMember.uniqueMemberId.split('-')[2] || '0',
-      );
-      nextNumber = lastNumber + 1;
-    }
-
+    const nextNumber = count + 1;
     const paddedNumber = String(nextNumber).padStart(7, '0');
     const uniqueMemberId = `${prefix}${paddedNumber}`;
 
-    const member = await this.prisma.membership.create({
+    return tx.membership.create({
       data: {
         ...dto,
         dob: new Date(dto.dob),
         uniqueMemberId,
+        emailVerified: true,
       },
     });
+  });
 
-    // 🔥 Send emails (non-blocking)
-    this.sendMembershipEmails(member).catch((err) => {
-      console.error('Email sending failed:', err);
-    });
+  this.sendMembershipEmails(member).catch(console.error);
 
-    return member;
-  }
+  return {
+    message: 'Application submitted successfully',
+    membershipId: member.uniqueMemberId,
+  };
+}
 
   async verify(memberId: string) {
   const member = await this.prisma.membership.findUnique({

@@ -36,6 +36,9 @@ export async function seedSuperAdmin() {
 
   const user = await prisma.user.create({
     data: {
+      firstname: SUPER_ADMIN.firstname,
+      lastname: SUPER_ADMIN.lastname,
+      phone: SUPER_ADMIN.phone,
       email: SUPER_ADMIN.email,
       password: hashedPassword,
     },
