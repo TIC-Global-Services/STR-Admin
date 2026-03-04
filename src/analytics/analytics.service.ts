@@ -4,10 +4,8 @@ import { Prisma } from '@prisma/client';
 
 const MEMBERSHIP_DIMENSIONS = {
   state: Prisma.sql`"state"`,
-  district: Prisma.sql`"district"`,
-  zone: Prisma.sql`"zone"`,
-  bloodGroup: Prisma.sql`"bloodGroup"`,
-  occupation: Prisma.sql`"occupation"`,
+  city: Prisma.sql`"city"`,
+  country: Prisma.sql`"country"`,
 } as const;
 
 type MembershipDimension = keyof typeof MEMBERSHIP_DIMENSIONS;
@@ -82,20 +80,16 @@ export class AnalyticsService {
   // MEMBERSHIP – DIMENSION ANALYTICS
   // ======================================================
   async membershipDimensions() {
-    const [state, district, zone, bloodGroup, occupation] = await Promise.all([
+    const [state, city, country] = await Promise.all([
       this.groupBy('state'),
-      this.groupBy('district'),
-      this.groupBy('zone'),
-      this.groupBy('bloodGroup'),
-      this.groupBy('occupation'),
+      this.groupBy('city'),
+      this.groupBy('country'),
     ]);
 
     return {
       state,
-      district,
-      zone,
-      bloodGroup,
-      occupation,
+      city,
+      country
     };
   }
 

@@ -30,6 +30,7 @@ export const PERMISSIONS = [
   // Membership
   'MEMBERSHIP_APPROVE',
   'MEMBERSHIP_REJECT',
+  'MEMBERSHIP_SUSPEND',
 
   // Analytics
   'ANALYTICS_VIEW',
@@ -55,6 +56,7 @@ export const ROLE_PERMISSIONS: Record<RoleType, readonly string[]> = {
 
     'MEMBERSHIP_APPROVE',
     'MEMBERSHIP_REJECT',
+    'MEMBERSHIP_SUSPEND',
 
     'ANALYTICS_VIEW',
   ],

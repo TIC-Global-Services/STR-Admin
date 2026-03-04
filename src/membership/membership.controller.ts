@@ -5,6 +5,7 @@ import {
   Param,
   Post,
   Query,
+  Req,
   Request,
   UseGuards,
 } from '@nestjs/common';
@@ -70,5 +71,21 @@ export class MembershipController {
       entityId: id,
     };
     return this.service.reject(id, req.user.sub, dto.reason);
+  }
+
+  @Post(':id/suspend')
+  @Permissions('MEMBERSHIP_SUSPEND')
+  suspend(
+    @Param('id') id: string,
+    @Body() dto: RejectMembershipDto,
+    @Request() req,
+  ) {
+    req.raw.auditAction = {
+      action: 'MEMBERSHIP_SUSPEND',
+      entity: 'Membership',
+      entityId: id,
+    };
+
+    return this.service.suspend(id, req.user.sub, dto.reason);
   }
 }

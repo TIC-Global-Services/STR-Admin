@@ -241,4 +241,18 @@ export class MembershipService {
 
     return member;
   }
+
+  async suspend(id: string, adminId: string, reason?: string) {
+  const member = await this.prisma.membership.update({
+    where: { id },
+    data: {
+      status: 'SUSPENDED',
+      suspensionReason: reason,
+      suspendedAt: new Date(),
+      reviewedById: adminId,
+    },
+  });
+
+  return member;
+}
 }
