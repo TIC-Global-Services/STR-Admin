@@ -14,6 +14,7 @@ import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { PermissionsGuard } from 'src/common/guards/permissions.guard';
 import { Permissions } from 'src/common/decorators/permissions.decorator';
 import { RejectMembershipDto } from './dto/reject-membership.dto';
+import { SuspendMembershipDto } from './dto/suspend-membership.dto';
 
 @Controller('admin/memberships')
 @UseGuards(JwtAuthGuard, PermissionsGuard)
@@ -77,7 +78,7 @@ export class MembershipController {
   @Permissions('MEMBERSHIP_SUSPEND')
   suspend(
     @Param('id') id: string,
-    @Body() dto: RejectMembershipDto,
+    @Body() dto: SuspendMembershipDto,
     @Request() req,
   ) {
     req.raw.auditAction = {
@@ -87,5 +88,17 @@ export class MembershipController {
     };
 
     return this.service.suspend(id, req.user.sub, dto.reason);
+  }
+
+  @Post(':id/reactivate')
+  @Permissions('MEMBERSHIP_APPROVE')
+  reactivate(@Param('id') id: string, @Request() req) {
+    req.raw.auditAction = {
+      action: 'MEMBERSHIP_REACTIVATE',
+      entity: 'Membership',
+      entityId: id,
+    };
+
+    return this.service.reactivate(id, req.user.sub);
   }
 }

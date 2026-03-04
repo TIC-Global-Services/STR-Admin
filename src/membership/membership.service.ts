@@ -243,16 +243,43 @@ export class MembershipService {
   }
 
   async suspend(id: string, adminId: string, reason?: string) {
-  const member = await this.prisma.membership.update({
-    where: { id },
-    data: {
-      status: 'SUSPENDED',
-      suspensionReason: reason,
-      suspendedAt: new Date(),
-      reviewedById: adminId,
-    },
-  });
+    const member = await this.prisma.membership.update({
+      where: { id },
+      data: {
+        status: 'SUSPENDED',
+        suspensionReason: reason,
+        suspendedAt: new Date(),
+        reviewedById: adminId,
+      },
+    });
 
-  return member;
-}
+    return member;
+  }
+
+  async reactivate(id: string, adminId: string) {
+    const member = await this.prisma.membership.findUnique({
+      where: { id },
+    });
+
+    if (!member) {
+      throw new BadRequestException('Membership not found');
+    }
+
+    if (member.status !== 'SUSPENDED') {
+      throw new BadRequestException(
+        'Only suspended members can be reactivated',
+      );
+    }
+
+    return this.prisma.membership.update({
+      where: { id },
+      data: {
+        status: 'APPROVED',
+        suspensionReason: null,
+        suspendedAt: null,
+        reviewedById: adminId,
+        reviewedAt: new Date(),
+      },
+    });
+  }
 }
